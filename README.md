@@ -6,3 +6,4 @@ Gocoins is a collection of API for trading on various cryptocurrency exchanges, 
 Supported Exchanges:
 
 + [BTCChina](https://vip.btcchina.com)
++ [BTC-E](https://btc-e.com)

@@ -98,7 +98,7 @@ func (b *BTCE) Balance() (balance *s.Balance, err error) {
 	return
 }
 
-func (b *BTCE) Trade(tradeType s.TradeType, pair s.Pair, price, amount float64) (success bool, err error) {
+func (b *BTCE) Trade(tradeType s.TradeType, pair s.Pair, price, amount float64) (orderId int64, err error) {
 	var reply struct {
 		Received float64
 		Remains  float64
@@ -111,7 +111,9 @@ func (b *BTCE) Trade(tradeType s.TradeType, pair s.Pair, price, amount float64) 
 		"rate":   price,
 		"amount": amount,
 	}, &reply)
-	success = err == nil
+	if err == nil {
+		orderId = reply.OrderId
+	}
 	return
 }
 
@@ -136,26 +138,15 @@ func (b *BTCE) Transactions(limit int) (transactions []s.Transaction, err error)
 	}
 	err = b.request("TransHistory", map[string]interface{}{"count": limit, "order": "DESC"}, &reply)
 	if err == nil {
-		for id, transaction := range reply {
+		for id, tr := range reply {
 			var t s.Transaction
 			t.Id, _ = strconv.ParseInt(id, 10, 64)
-			t.Timestamp = transaction.Timestamp
-			// TODO parse DESC
-			// Parsing could be some tedious work
-			switch transaction.Type {
-			case 1:
-				t.Type = s.Deposition
-			case 4:
-				switch {
-				case strings.HasPrefix(transaction.Desc, "Sell"):
-					t.Type = s.Sold
-				case strings.HasPrefix(transaction.Desc, "Buy"):
-					t.Type = s.Bought
-				}
-			}
+			t.Timestamp = tr.Timestamp
+			// TODO parse DESC and fill amounts better
 			t.Amounts = map[s.Symbol]float64{
-				s.Symbol(strings.ToUpper(transaction.Currency)): transaction.Amount,
+				s.Symbol(strings.ToUpper(tr.Currency)): tr.Amount,
 			}
+			t.Descritpion = tr.Desc
 			transactions = append(transactions, t)
 		}
 	}
@@ -165,7 +156,7 @@ func (b *BTCE) Transactions(limit int) (transactions []s.Transaction, err error)
 func (b *BTCE) Orders() (orders []s.Order, err error) {
 	var reply map[string]struct {
 		Pair             string
-		Type             string
+		Type             s.TradeType
 		Amount           float64
 		Rate             float64
 		TimestampCreated int64 `json:"timestamp_created"`
@@ -176,21 +167,11 @@ func (b *BTCE) Orders() (orders []s.Order, err error) {
 		var o s.Order
 		o.Id, _ = strconv.ParseInt(id, 10, 64)
 		o.Pair = ssr(order.Pair)
-		switch order.Type {
-		case "sell":
-			o.Type = s.Sell
-		case "buy":
-			o.Type = s.Buy
-		}
+		o.Type = order.Type
 		o.Price = order.Rate
 		o.Remain = order.Amount
 		o.Amount = order.Amount
 		o.Timestamp = order.TimestampCreated
-		// TODO no idea about other status
-		switch order.Status {
-		case 0:
-			o.Status = s.Open
-		}
 		orders = append(orders, o)
 	}
 	return
@@ -199,7 +180,7 @@ func (b *BTCE) Orders() (orders []s.Order, err error) {
 func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err error) {
 	var reply map[string]struct {
 		Pair        string
-		Type        string
+		Type        s.TradeType
 		Amount      float64
 		Rate        float64
 		OrderId     int64 `json:"order_id"`
@@ -218,12 +199,7 @@ func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err err
 			t.Price = trade.Rate
 			t.Amount = trade.Amount
 			t.Timestamp = trade.Timestamp
-			switch trade.Type {
-			case "sell":
-				t.Type = s.Sell
-			case "buy":
-				t.Type = s.Buy
-			}
+			t.Type = trade.Type
 			t.Pair = ssr(trade.Pair)
 			trades = append(trades, t)
 		}
@@ -262,7 +238,7 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, err error) {
 		Tid       int64
 		Price     float64
 		Amount    float64
-		Type      string
+		Type      s.TradeType
 		Timestamp int64
 	}
 	err = getjson(url, &reply)
@@ -275,12 +251,7 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, err error) {
 			t.Timestamp = trade.Timestamp
 			t.Price = trade.Price
 			t.Amount = trade.Amount
-			switch trade.Type {
-			case "ask":
-				t.Type = s.Sell
-			case "bid":
-				t.Type = s.Buy
-			}
+			t.Type = trade.Type
 			t.Pair = pair
 			trades = append(trades, t)
 		}

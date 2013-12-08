@@ -1,18 +1,11 @@
 package btcchina
 
 import (
-	"bytes"
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
-	"time"
 
-	"github.com/thinxer/gocoins"
+	s "github.com/thinxer/gocoins"
 )
 
 const (
@@ -31,44 +24,6 @@ type BTCChina struct {
 // Actually the secret should be bytes. string is just more convenient here.
 func MakeClient(apikey, secret string) *BTCChina {
 	return &BTCChina{apikey, []byte(secret), &http.Client{}}
-}
-
-func (bc *BTCChina) request(method string, params []interface{}, reply interface{}) (err error) {
-	tonce := time.Now().UnixNano() / 1000
-	data := map[string]interface{}{
-		"id":            fmt.Sprintf("%d", tonce),
-		"tonce":         tonce,
-		"accesskey":     bc.apikey,
-		"requestmethod": "post",
-		"method":        method,
-		"params":        params,
-	}
-
-	var message bytes.Buffer
-	fields := strings.Split("tonce accesskey requestmethod id method", " ")
-	for _, field := range fields {
-		message.WriteString(fmt.Sprintf("%s=%v&", field, data[field]))
-	}
-	message.WriteString(fmt.Sprintf("params=%s", php_implode(params)))
-	h := hmac.New(sha1.New, bc.secret)
-	h.Write(message.Bytes())
-	digest := hex.EncodeToString(h.Sum(nil))
-
-	data_json, _ := json.Marshal(data)
-	req, _ := http.NewRequest("POST", ENDPOINT, bytes.NewReader(data_json))
-	req.SetBasicAuth(bc.apikey, digest)
-	req.Header.Set("Json-Rpc-Tonce", fmt.Sprintf("%d", tonce))
-	if r, err := bc.client.Do(req); err == nil {
-		decoder := json.NewDecoder(r.Body)
-		var response struct {
-			Result interface{}
-			Id     string
-		}
-		response.Result = reply
-		err = decoder.Decode(&response)
-		r.Body.Close()
-	}
-	return
 }
 
 type AccountInfo struct {
@@ -95,27 +50,33 @@ func (bc *BTCChina) AccountInfo() (info *AccountInfo, err error) {
 	return
 }
 
-func (bc *BTCChina) Balance() (balance *gocoins.Balance, err error) {
+func (bc *BTCChina) Balance() (balance *s.Balance, err error) {
 	if rai, err := bc.AccountInfo(); err == nil {
-		balance = &gocoins.Balance{
-			make(map[gocoins.Symbol]float64),
-			make(map[gocoins.Symbol]float64),
+		balance = &s.Balance{
+			make(map[s.Symbol]float64),
+			make(map[s.Symbol]float64),
 		}
-		balance.Available[gocoins.CNY], _ = strconv.ParseFloat(rai.Balance["cny"].Amount, 64)
-		balance.Available[gocoins.BTC], _ = strconv.ParseFloat(rai.Balance["btc"].Amount, 64)
-		balance.Frozen[gocoins.CNY], _ = strconv.ParseFloat(rai.Frozen["cny"].Amount, 64)
-		balance.Frozen[gocoins.BTC], _ = strconv.ParseFloat(rai.Frozen["btc"].Amount, 64)
+		balance.Available[s.CNY], _ = strconv.ParseFloat(rai.Balance["cny"].Amount, 64)
+		balance.Available[s.BTC], _ = strconv.ParseFloat(rai.Balance["btc"].Amount, 64)
+		balance.Frozen[s.CNY], _ = strconv.ParseFloat(rai.Frozen["cny"].Amount, 64)
+		balance.Frozen[s.BTC], _ = strconv.ParseFloat(rai.Frozen["btc"].Amount, 64)
 	}
 	return
 }
 
-func (bc *BTCChina) Trade(tradeType gocoins.TradeType, _ gocoins.Pair, price, amount float64) (success bool, err error) {
+func (bc *BTCChina) Trade(tradeType s.TradeType, _ s.Pair, price, amount float64) (orderId int64, err error) {
+	var success bool
 	switch tradeType {
-	case gocoins.Sell:
+	case s.Sell:
 		err = bc.request("sellOrder", []interface{}{price, amount}, &success)
-	case gocoins.Buy:
+	case s.Buy:
 		err = bc.request("buyOrder", []interface{}{price, amount}, &success)
 	}
+	if err == nil && !success {
+		err = fmt.Errorf("Place trade order failed")
+	}
+	// TODO
+	orderId = -1
 	return
 }
 
@@ -124,16 +85,7 @@ func (bc *BTCChina) Cancel(orderId int64) (success bool, err error) {
 	return
 }
 
-var transactionTypeMapping = map[string]gocoins.TransactionType{
-	"buybtc":        gocoins.Bought,
-	"sellbtc":       gocoins.Sold,
-	"fundmoney":     gocoins.Deposition,
-	"withdrawmoney": gocoins.Withdrawal,
-	"fundbtc":       gocoins.Deposition,
-	"Withdrawalbtc": gocoins.Withdrawal,
-}
-
-func (bc *BTCChina) Transactions(limit int) (transactions []gocoins.Transaction, err error) {
+func (bc *BTCChina) Transactions(limit int) (transactions []s.Transaction, err error) {
 	var response struct {
 		Transaction []struct {
 			Id        int64
@@ -145,24 +97,24 @@ func (bc *BTCChina) Transactions(limit int) (transactions []gocoins.Transaction,
 	}
 	if err = bc.request("getTransactions", []interface{}{"all", limit}, &response); err == nil {
 		for _, tr := range response.Transaction {
-			var t gocoins.Transaction
+			var t s.Transaction
 			t.Id = tr.Id
-			t.Type, _ = transactionTypeMapping[tr.Type]
 			t.Timestamp = tr.Date
-			t.Amounts = make(map[gocoins.Symbol]float64)
-			t.Amounts[gocoins.BTC], _ = strconv.ParseFloat(tr.BtcAmount, 64)
-			t.Amounts[gocoins.CNY], _ = strconv.ParseFloat(tr.CnyAmount, 64)
+			t.Amounts = make(map[s.Symbol]float64)
+			t.Amounts[s.BTC], _ = strconv.ParseFloat(tr.BtcAmount, 64)
+			t.Amounts[s.CNY], _ = strconv.ParseFloat(tr.CnyAmount, 64)
+			t.Descritpion = tr.Type
 			transactions = append(transactions, t)
 		}
 	}
 	return
 }
 
-func (bc *BTCChina) Orders() (orders []gocoins.Order, err error) {
+func (bc *BTCChina) Orders() (orders []s.Order, err error) {
 	var response struct {
 		Order []struct {
 			Id             int64
-			Type           string
+			Type           s.TradeType
 			Price          string
 			Currency       string
 			Amount         string
@@ -173,26 +125,13 @@ func (bc *BTCChina) Orders() (orders []gocoins.Order, err error) {
 	}
 	if err = bc.request("getOrders", []interface{}{}, &response); err == nil {
 		for _, order := range response.Order {
-			var o gocoins.Order
+			var o s.Order
 			o.Id = order.Id
-			switch order.Type {
-			case "bid":
-				o.Type = gocoins.Buy
-			case "ask":
-				o.Type = gocoins.Sell
-			}
+			o.Type = order.Type
 			o.Price, _ = strconv.ParseFloat(order.Price, 64)
 			o.Amount, _ = strconv.ParseFloat(order.AmountOriginal, 64)
 			o.Remain, _ = strconv.ParseFloat(order.Amount, 64)
-			switch order.Status {
-			case "open":
-				o.Status = gocoins.Open
-			case "closed":
-				o.Status = gocoins.Closed
-			case "cancelled":
-				o.Status = gocoins.Cancelled
-			}
-			o.Pair = gocoins.BTC_CNY
+			o.Pair = s.BTC_CNY
 			o.Timestamp = order.Date
 			orders = append(orders, o)
 		}
@@ -200,7 +139,7 @@ func (bc *BTCChina) Orders() (orders []gocoins.Order, err error) {
 	return
 }
 
-func (bc *BTCChina) Orderbook(_ gocoins.Pair, limit int) (orderbook *gocoins.Orderbook, err error) {
+func (bc *BTCChina) Orderbook(_ s.Pair, limit int) (orderbook *s.Orderbook, err error) {
 	var response struct {
 		MarketDepth struct {
 			Ask, Bid []struct {
@@ -209,42 +148,39 @@ func (bc *BTCChina) Orderbook(_ gocoins.Pair, limit int) (orderbook *gocoins.Ord
 		} `json:"market_depth"`
 	}
 	err = bc.request("getMarketDepth2", []interface{}{limit}, &response)
-	orderbook = &gocoins.Orderbook{response.MarketDepth.Ask, response.MarketDepth.Bid}
+	orderbook = &s.Orderbook{response.MarketDepth.Ask, response.MarketDepth.Bid}
 	return
 }
 
-func (bc *BTCChina) History(_ gocoins.Pair, since int64) (trades []gocoins.Trade, err error) {
+func (bc *BTCChina) History(_ s.Pair, since int64) (trades []s.Trade, err error) {
 	url := HISTORY
 	if since >= 0 {
 		url = fmt.Sprintf("%s?since=%d", url, since)
 	}
 
 	var ts []struct {
-		Tid, Type, Date string
-		Amount, Price   float64
+		Tid, Date     string
+		Type          s.TradeType
+		Amount, Price float64
 	}
 	if err = getjson(url, &ts); err != nil {
 		return
 	}
 
 	for _, tx := range ts {
-		var t gocoins.Trade
+		var t s.Trade
 		t.Id, _ = strconv.ParseInt(tx.Tid, 10, 64)
 		t.Timestamp, _ = strconv.ParseInt(tx.Date, 10, 64)
 		t.Price = tx.Price
 		t.Amount = tx.Amount
-		if tx.Type == "buy" {
-			t.Type = gocoins.Buy
-		} else if tx.Type == "sell" {
-			t.Type = gocoins.Sell
-		}
-		t.Pair = gocoins.BTC_CNY
+		t.Type = tx.Type
+		t.Pair = s.BTC_CNY
 		trades = append(trades, t)
 	}
 	return
 }
 
-func (bc *BTCChina) Ticker(_ gocoins.Pair) (t *gocoins.Ticker, err error) {
+func (bc *BTCChina) Ticker(_ s.Pair) (t *s.Ticker, err error) {
 	var v map[string]struct {
 		Buy, Sell, Last, Vol, High, Low string
 	}
@@ -252,7 +188,7 @@ func (bc *BTCChina) Ticker(_ gocoins.Pair) (t *gocoins.Ticker, err error) {
 		return
 	}
 	ticker := v["ticker"]
-	t = new(gocoins.Ticker)
+	t = new(s.Ticker)
 	t.Buy, _ = strconv.ParseFloat(ticker.Buy, 64)
 	t.Sell, _ = strconv.ParseFloat(ticker.Sell, 64)
 	t.Last, _ = strconv.ParseFloat(ticker.Last, 64)
@@ -260,42 +196,4 @@ func (bc *BTCChina) Ticker(_ gocoins.Pair) (t *gocoins.Ticker, err error) {
 	t.High, _ = strconv.ParseFloat(ticker.High, 64)
 	t.Low, _ = strconv.ParseFloat(ticker.Low, 64)
 	return
-}
-
-func getjson(url string, v interface{}) (err error) {
-	res, err := http.Get(url)
-	if err != nil {
-		return
-	}
-	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(v)
-	res.Body.Close()
-	return
-}
-
-func php_float(v interface{}) string {
-	s := fmt.Sprintf("%f", v)
-	s = strings.TrimRight(s, "0")
-	s = strings.TrimRight(s, ".")
-	return s
-}
-func php_implode(values []interface{}) string {
-	parts := make([]string, 0)
-	for _, v := range values {
-		switch v := v.(type) {
-		case bool:
-			if v {
-				parts = append(parts, "1")
-			} else {
-				parts = append(parts, "")
-			}
-		case float32, float64:
-			parts = append(parts, php_float(v))
-		case string:
-			parts = append(parts, v)
-		default:
-			parts = append(parts, fmt.Sprintf("%v", v))
-		}
-	}
-	return strings.Join(parts, ",")
 }
