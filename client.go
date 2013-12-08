@@ -24,10 +24,6 @@ type Pair struct {
 	Base, Target Symbol
 }
 
-func (p Pair) String() string {
-	return string(p.Target + "/" + p.Base)
-}
-
 // Some predefined symbols. You are not limited to use these.
 const (
 	BTC Symbol = "BTC"

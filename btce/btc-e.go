@@ -106,7 +106,7 @@ func (b *BTCE) Trade(tradeType s.TradeType, pair s.Pair, price, amount float64) 
 		Funds    Funds
 	}
 	err = b.request("Trade", map[string]interface{}{
-		"pair":   ss(pair),
+		"pair":   pair,
 		"type":   strings.ToLower(tradeType.String()),
 		"rate":   price,
 		"amount": amount,
@@ -155,7 +155,7 @@ func (b *BTCE) Transactions(limit int) (transactions []s.Transaction, err error)
 
 func (b *BTCE) Orders() (orders []s.Order, err error) {
 	var reply map[string]struct {
-		Pair             string
+		Pair             s.Pair
 		Type             s.TradeType
 		Amount           float64
 		Rate             float64
@@ -166,7 +166,7 @@ func (b *BTCE) Orders() (orders []s.Order, err error) {
 	for id, order := range reply {
 		var o s.Order
 		o.Id, _ = strconv.ParseInt(id, 10, 64)
-		o.Pair = ssr(order.Pair)
+		o.Pair = order.Pair
 		o.Type = order.Type
 		o.Price = order.Rate
 		o.Remain = order.Amount
@@ -179,7 +179,7 @@ func (b *BTCE) Orders() (orders []s.Order, err error) {
 
 func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err error) {
 	var reply map[string]struct {
-		Pair        string
+		Pair        s.Pair
 		Type        s.TradeType
 		Amount      float64
 		Rate        float64
@@ -189,7 +189,7 @@ func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err err
 	}
 	params := map[string]interface{}{"from_id": since, "order": "DESC"}
 	if pair != s.ALL {
-		params["pair"] = ss(pair)
+		params["pair"] = pair
 	}
 	err = b.request("TradeHistory", params, &reply)
 	if err == nil {
@@ -200,7 +200,7 @@ func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err err
 			t.Amount = trade.Amount
 			t.Timestamp = trade.Timestamp
 			t.Type = trade.Type
-			t.Pair = ssr(trade.Pair)
+			t.Pair = trade.Pair
 			trades = append(trades, t)
 		}
 	}
@@ -208,7 +208,7 @@ func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err err
 }
 
 func (b *BTCE) Orderbook(pair s.Pair, limit int) (orderbook *s.Orderbook, err error) {
-	url := fmt.Sprintf("%s/3/depth/%s", PUBLIC_API, ss(pair))
+	url := fmt.Sprintf("%s/3/depth/%s", PUBLIC_API, pair.LowerString())
 	var reply map[string]struct {
 		Asks, Bids [][]float64
 	}
@@ -221,7 +221,7 @@ func (b *BTCE) Orderbook(pair s.Pair, limit int) (orderbook *s.Orderbook, err er
 	err = getjson(url, &reply)
 	if err == nil {
 		orderbook = new(s.Orderbook)
-		reply_orderbook, _ := reply[ss(pair)]
+		reply_orderbook, _ := reply[pair.LowerString()]
 		orderbook.Asks = transform(reply_orderbook.Asks)
 		orderbook.Bids = transform(reply_orderbook.Bids)
 	}
@@ -230,7 +230,7 @@ func (b *BTCE) Orderbook(pair s.Pair, limit int) (orderbook *s.Orderbook, err er
 
 // Note that BTC-E use `Timestamp` field for the `since` parameter
 func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, err error) {
-	url := fmt.Sprintf("%s/3/trades/%s", PUBLIC_API, ss(pair))
+	url := fmt.Sprintf("%s/3/trades/%s", PUBLIC_API, pair.LowerString())
 	if since > 0 {
 		url = fmt.Sprintf("%s?since=%d", url, since)
 	}
@@ -243,7 +243,7 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, err error) {
 	}
 	err = getjson(url, &reply)
 	if err == nil {
-		reply_trades := reply[ss(pair)]
+		reply_trades := reply[pair.LowerString()]
 		for i := len(reply_trades) - 1; i >= 0; i-- {
 			trade := reply_trades[i]
 			var t s.Trade
@@ -260,7 +260,7 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, err error) {
 }
 
 func (b *BTCE) Ticker(pair s.Pair) (t *s.Ticker, err error) {
-	url := fmt.Sprintf("%s/3/%s/ticker", PUBLIC_API, ss(pair))
+	url := fmt.Sprintf("%s/3/%s/ticker", PUBLIC_API, pair.LowerString())
 	var ticker struct {
 		Ticker struct {
 			High, Low, Avg, Vol, Last, Buy, Sell float64
@@ -305,13 +305,4 @@ func getjson(url string, v interface{}) (err error) {
 	err = decoder.Decode(v)
 	res.Body.Close()
 	return
-}
-
-func ss(pair s.Pair) string {
-	return strings.ToLower(fmt.Sprintf("%s_%s", pair.Target, pair.Base))
-}
-
-func ssr(pair string) s.Pair {
-	parts := strings.Split(strings.ToUpper(pair), "_")
-	return s.Pair{s.Symbol(parts[1]), s.Symbol(parts[0])}
 }
