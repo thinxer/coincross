@@ -111,9 +111,9 @@ func (bc *BTCChina) Balance() (balance *gocoins.Balance, err error) {
 
 func (bc *BTCChina) Trade(tradeType gocoins.TradeType, _ gocoins.Pair, price, amount float64) (success bool, err error) {
 	switch tradeType {
-	case gocoins.Ask:
+	case gocoins.Sell:
 		err = bc.request("sellOrder", []interface{}{price, amount}, &success)
-	case gocoins.Bid:
+	case gocoins.Buy:
 		err = bc.request("buyOrder", []interface{}{price, amount}, &success)
 	}
 	return
@@ -127,9 +127,9 @@ func (bc *BTCChina) Cancel(orderId int64) (success bool, err error) {
 var transactionTypeMapping = map[string]gocoins.TransactionType{
 	"buybtc":        gocoins.Bought,
 	"sellbtc":       gocoins.Sold,
-	"fundmoney":     gocoins.Deposit,
+	"fundmoney":     gocoins.Deposition,
 	"withdrawmoney": gocoins.Withdrawal,
-	"fundbtc":       gocoins.Deposit,
+	"fundbtc":       gocoins.Deposition,
 	"Withdrawalbtc": gocoins.Withdrawal,
 }
 
@@ -177,9 +177,9 @@ func (bc *BTCChina) Orders() (orders []gocoins.Order, err error) {
 			o.Id = order.Id
 			switch order.Type {
 			case "bid":
-				o.Type = gocoins.Bid
+				o.Type = gocoins.Buy
 			case "ask":
-				o.Type = gocoins.Ask
+				o.Type = gocoins.Sell
 			}
 			o.Price, _ = strconv.ParseFloat(order.Price, 64)
 			o.Amount, _ = strconv.ParseFloat(order.AmountOriginal, 64)
@@ -202,10 +202,14 @@ func (bc *BTCChina) Orders() (orders []gocoins.Order, err error) {
 
 func (bc *BTCChina) Orderbook(_ gocoins.Pair, limit int) (orderbook *gocoins.Orderbook, err error) {
 	var response struct {
-		MarketDepth gocoins.Orderbook `json:"market_depth"`
+		MarketDepth struct {
+			Ask, Bid []struct {
+				Price, Amount float64
+			}
+		} `json:"market_depth"`
 	}
 	err = bc.request("getMarketDepth2", []interface{}{limit}, &response)
-	orderbook = &response.MarketDepth
+	orderbook = &gocoins.Orderbook{response.MarketDepth.Ask, response.MarketDepth.Bid}
 	return
 }
 
@@ -223,17 +227,19 @@ func (bc *BTCChina) History(_ gocoins.Pair, since int64) (trades []gocoins.Trade
 		return
 	}
 
-	trades = make([]gocoins.Trade, len(ts))
-	for idx, tx := range ts {
-		trades[idx].Id, _ = strconv.ParseInt(tx.Tid, 10, 64)
-		trades[idx].Timestamp, _ = strconv.ParseInt(tx.Date, 10, 64)
-		trades[idx].Price = tx.Price
-		trades[idx].Amount = tx.Amount
+	for _, tx := range ts {
+		var t gocoins.Trade
+		t.Id, _ = strconv.ParseInt(tx.Tid, 10, 64)
+		t.Timestamp, _ = strconv.ParseInt(tx.Date, 10, 64)
+		t.Price = tx.Price
+		t.Amount = tx.Amount
 		if tx.Type == "buy" {
-			trades[idx].Type = gocoins.Bid
+			t.Type = gocoins.Buy
 		} else if tx.Type == "sell" {
-			trades[idx].Type = gocoins.Ask
+			t.Type = gocoins.Sell
 		}
+		t.Pair = gocoins.BTC_CNY
+		trades = append(trades, t)
 	}
 	return
 }

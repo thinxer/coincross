@@ -17,8 +17,11 @@ const (
 )
 
 var (
+	ALL     = Pair{"", ""}
 	BTC_CNY = Pair{CNY, BTC}
+	BTC_USD = Pair{USD, BTC}
 	LTC_CNY = Pair{CNY, LTC}
+	LTC_USD = Pair{USD, LTC}
 	LTC_BTC = Pair{BTC, LTC}
 )
 
@@ -35,16 +38,16 @@ type TradeType int
 
 const (
 	_ TradeType = iota
-	Ask
-	Bid
+	Sell
+	Buy
 )
 
 func (t TradeType) String() string {
 	switch t {
-	case Ask:
-		return "Ask"
-	case Bid:
-		return "Bid"
+	case Sell:
+		return "Sell"
+	case Buy:
+		return "Buy"
 	default:
 		return ""
 	}
@@ -56,10 +59,11 @@ type Trade struct {
 	Type      TradeType
 	Price     float64
 	Amount    float64
+	Pair      Pair
 }
 
 type Orderbook struct {
-	Ask, Bid []struct {
+	Asks, Bids []struct {
 		Price, Amount float64
 	}
 }
@@ -100,7 +104,7 @@ type TransactionType int
 
 const (
 	_ TransactionType = iota
-	Deposit
+	Deposition
 	Withdrawal
 	Bought
 	Sold
