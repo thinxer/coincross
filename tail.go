@@ -11,9 +11,8 @@ import (
 // Some APIs (like BTC-E) use timestamp for since parameter.
 // You should set useTimestamp to true if that is the case.
 func Tail(c Client, pair Pair, interval time.Duration, useTimestamp bool, t chan Trade) {
-	var tid, timestamp int64
-	tid = -1
-	timestamp = -1
+	var tid, timestamp int64 = -1, -1
+	fib := MakeFibonacci()
 	for {
 		start := time.Now()
 		since := tid
@@ -32,10 +31,12 @@ func Tail(c Client, pair Pair, interval time.Duration, useTimestamp bool, t chan
 				tid = trades[len(trades)-1].Id
 				timestamp = trades[len(trades)-1].Timestamp
 			}
+			fib.Prev()
 		} else {
-			log.Print(err.Error())
-			close(t)
-			break
+			backoff := fib.Next()
+			log.Printf("Error getting history: %s", err.Error())
+			log.Printf("Waiting for %ds before retrying...", backoff)
+			time.Sleep(time.Duration(backoff) * time.Second)
 		}
 		time.Sleep(interval - dur)
 	}
