@@ -21,9 +21,10 @@ type BTCChina struct {
 	client *http.Client
 }
 
-// Actually the secret should be bytes. string is just more convenient here.
-func MakeClient(apikey, secret string) *BTCChina {
-	return &BTCChina{apikey, []byte(secret), &http.Client{}}
+func MakeClient(apikey, secret string, transport *http.Transport) *BTCChina {
+	return &BTCChina{apikey, []byte(secret), &http.Client{
+		Transport: transport,
+	}}
 }
 
 type AccountInfo struct {

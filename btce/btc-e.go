@@ -26,9 +26,10 @@ type BTCE struct {
 	client *http.Client
 }
 
-// Actually the secret should be bytes. string is just more convenient here.
-func MakeClient(apikey, secret string) *BTCE {
-	return &BTCE{apikey, []byte(secret), &http.Client{}}
+func MakeClient(apikey, secret string, transport *http.Transport) *BTCE {
+	return &BTCE{apikey, []byte(secret), &http.Client{
+		Transport: transport,
+	}}
 }
 
 func (b *BTCE) request(method string, params map[string]interface{}, v interface{}) (err error) {
