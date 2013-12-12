@@ -12,7 +12,7 @@ import (
 // You should set useTimestamp to true if that is the case.
 func Tail(c Client, pair Pair, interval time.Duration, useTimestamp bool, t chan Trade) {
 	var tid, timestamp int64 = -1, -1
-	fib := MakeFibonacci()
+	fib := makeFibonacci()
 	for {
 		start := time.Now()
 		since := tid
