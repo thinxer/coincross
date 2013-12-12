@@ -74,7 +74,7 @@ func (bc *BTCChina) Trade(tradeType s.TradeType, _ s.Pair, price, amount float64
 		err = bc.request("buyOrder", []interface{}{price, amount}, &success)
 	}
 	if err == nil && !success {
-		err = fmt.Errorf("Place trade order failed")
+		err = s.TradeError{"place order failed"}
 	}
 	// TODO
 	orderId = -1
