@@ -8,7 +8,7 @@ type Fibonacci struct {
 	a, b int64
 }
 
-func makeFibonacci() *Fibonacci {
+func newFibonacci() *Fibonacci {
 	return &Fibonacci{
 		a: 0,
 		b: 1,
@@ -30,7 +30,7 @@ func (f *Fibonacci) Prev() int64 {
 // If f returns true, repeat at give interval.
 // Otherwise, sleep in seconds of Fibonacci series.
 func FibonacciTimer(f func() bool, interval time.Duration) {
-	fib := makeFibonacci()
+	fib := newFibonacci()
 	for {
 		start := time.Now()
 		r := f()

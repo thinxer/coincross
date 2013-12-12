@@ -41,14 +41,6 @@ var (
 	LTC_BTC = Pair{BTC, LTC}
 )
 
-type Balance struct {
-	// Money you can place on orders.
-	Available map[Symbol]float64
-	// Money already on orders.
-	// This field is optional.
-	Frozen map[Symbol]float64
-}
-
 type Ticker struct {
 	Buy, Sell, High, Low, Last, Volume float64
 }
@@ -102,7 +94,7 @@ type Orderbook struct {
 // This is the interface that every API implementation should use.
 type Client interface {
 	// Should return the balance of current account.
-	Balance() (*Balance, error)
+	Balance() (map[Symbol]float64, error)
 	// Use with caution: this method is for real trading.
 	Trade(tradeType TradeType, pair Pair, price, amount float64) (int64, error)
 	// Cancel an active order.

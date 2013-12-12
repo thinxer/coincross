@@ -21,7 +21,7 @@ type BTCChina struct {
 	client *http.Client
 }
 
-func MakeClient(apikey, secret string, transport *http.Transport) *BTCChina {
+func NewClient(apikey, secret string, transport *http.Transport) *BTCChina {
 	return &BTCChina{apikey, []byte(secret), &http.Client{
 		Transport: transport,
 	}}
@@ -51,16 +51,12 @@ func (bc *BTCChina) AccountInfo() (info *AccountInfo, err error) {
 	return
 }
 
-func (bc *BTCChina) Balance() (balance *s.Balance, err error) {
-	if rai, err := bc.AccountInfo(); err == nil {
-		balance = &s.Balance{
-			make(map[s.Symbol]float64),
-			make(map[s.Symbol]float64),
-		}
-		balance.Available[s.CNY], _ = strconv.ParseFloat(rai.Balance["cny"].Amount, 64)
-		balance.Available[s.BTC], _ = strconv.ParseFloat(rai.Balance["btc"].Amount, 64)
-		balance.Frozen[s.CNY], _ = strconv.ParseFloat(rai.Frozen["cny"].Amount, 64)
-		balance.Frozen[s.BTC], _ = strconv.ParseFloat(rai.Frozen["btc"].Amount, 64)
+func (bc *BTCChina) Balance() (balance map[s.Symbol]float64, err error) {
+	rai, err := bc.AccountInfo()
+	if err == nil {
+		balance = make(map[s.Symbol]float64)
+		balance[s.CNY], _ = strconv.ParseFloat(rai.Balance["cny"].Amount, 64)
+		balance[s.BTC], _ = strconv.ParseFloat(rai.Balance["btc"].Amount, 64)
 	}
 	return
 }

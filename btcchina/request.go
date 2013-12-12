@@ -37,7 +37,8 @@ func (bc *BTCChina) request(method string, params []interface{}, reply interface
 	req, _ := http.NewRequest("POST", ENDPOINT, bytes.NewReader(data_json))
 	req.SetBasicAuth(bc.apikey, digest)
 	req.Header.Set("Json-Rpc-Tonce", fmt.Sprintf("%d", tonce))
-	if r, err := bc.client.Do(req); err == nil {
+	r, err := bc.client.Do(req)
+	if err == nil {
 		decoder := json.NewDecoder(r.Body)
 		var response struct {
 			Result interface{}
