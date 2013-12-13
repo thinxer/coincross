@@ -149,7 +149,8 @@ func (bc *BTCChina) Orderbook(_ s.Pair, limit int) (orderbook *s.Orderbook, err 
 	return
 }
 
-func (bc *BTCChina) History(_ s.Pair, since int64) (trades []s.Trade, err error) {
+func (bc *BTCChina) History(_ s.Pair, since int64) (trades []s.Trade, next int64, err error) {
+	next = since
 	url := HISTORY
 	if since >= 0 {
 		url = fmt.Sprintf("%s?since=%d", url, since)
@@ -173,6 +174,7 @@ func (bc *BTCChina) History(_ s.Pair, since int64) (trades []s.Trade, err error)
 		t.Type = tx.Type
 		t.Pair = s.BTC_CNY
 		trades = append(trades, t)
+		next = t.Id
 	}
 	return
 }

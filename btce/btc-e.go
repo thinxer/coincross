@@ -227,7 +227,8 @@ func (b *BTCE) Orderbook(pair s.Pair, limit int) (orderbook *s.Orderbook, err er
 }
 
 // Note that BTC-E use `Timestamp` field for the `since` parameter
-func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, err error) {
+func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, next int64, err error) {
+	next = since
 	url := fmt.Sprintf("%s/3/trades/%s", PUBLIC_API, pair.LowerString())
 	if since > 0 {
 		url = fmt.Sprintf("%s?since=%d", url, since)
@@ -252,6 +253,7 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, err error) {
 			t.Type = trade.Type
 			t.Pair = pair
 			trades = append(trades, t)
+			next = t.Timestamp
 		}
 	}
 	return
