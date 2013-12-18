@@ -11,6 +11,13 @@ func (p Pair) String() string {
 	return string(p.Target + "/" + p.Base)
 }
 
+// For flag
+func (p *Pair) Set(s string) error {
+	parts := strings.Split(strings.ToUpper(s), "/")
+	*p = Pair{Symbol(parts[1]), Symbol(parts[0])}
+	return nil
+}
+
 // Returns btc_usd
 func (p Pair) LowerString() string {
 	return strings.ToLower(string(p.Target + "_" + p.Base))
@@ -67,4 +74,8 @@ func (t TradeType) String() string {
 	default:
 		return ""
 	}
+}
+
+func (t *TradeType) Set(s string) error {
+	return t.UnmarshalJSON([]byte(s))
 }
