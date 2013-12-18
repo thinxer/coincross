@@ -21,7 +21,7 @@ type BTCChina struct {
 	client *http.Client
 }
 
-func NewClient(apikey, secret string, transport *http.Transport) *BTCChina {
+func NewClient(apikey, secret string, transport *http.Transport) s.Client {
 	return &BTCChina{apikey, []byte(secret), &http.Client{
 		Transport: transport,
 	}}

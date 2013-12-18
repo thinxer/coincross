@@ -26,7 +26,7 @@ type BTCE struct {
 	client *http.Client
 }
 
-func NewClient(apikey, secret string, transport *http.Transport) *BTCE {
+func NewClient(apikey, secret string, transport *http.Transport) s.Client {
 	return &BTCE{apikey, []byte(secret), &http.Client{
 		Transport: transport,
 	}}
@@ -86,7 +86,7 @@ func (b *BTCE) AccountInfo() (info *AccountInfo, err error) {
 	return
 }
 
-func (b *BTCE) Balance() (balance map[string]float64, err error) {
+func (b *BTCE) Balance() (balance map[s.Symbol]float64, err error) {
 	if info, err := b.AccountInfo(); err == nil {
 		balance = make(map[s.Symbol]float64)
 		for symbol, amount := range info.Funds {
