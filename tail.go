@@ -22,6 +22,7 @@ func Tail(c Client, pair Pair, interval time.Duration, t chan Trade) {
 		if err == nil {
 			for _, tx := range trades {
 				if tx.Id > tid {
+					tid = tx.Id
 					t <- tx
 				}
 			}
