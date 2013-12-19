@@ -37,12 +37,12 @@ type AccountInfo struct {
 	}
 	Profile struct {
 		Username             string
-		BtcDepositAddress    string `json:"btc_deposit_address"`
-		BtcWithdrawalAddress string `json:"btc_withdrawal_address"`
-		OtpEnabled           bool   `json:"otp_enabled"`
-		TradeFee             string `json:"trade_fee"`
-		TradePasswordEnabled bool   `json:"trade_password_enabled"`
-		DailyBtcLimit        int    `json:"daily_btc_limit"`
+		BtcDepositAddress    string  `json:"btc_deposit_address"`
+		BtcWithdrawalAddress string  `json:"btc_withdrawal_address"`
+		OtpEnabled           bool    `json:"otp_enabled"`
+		TradeFee             float64 `json:"trade_fee"`
+		TradePasswordEnabled bool    `json:"trade_password_enabled"`
+		DailyBtcLimit        int     `json:"daily_btc_limit"`
 	}
 }
 
