@@ -1,13 +1,17 @@
 package gocoins
 
 import (
-	"fmt"
+	"errors"
 )
 
-type TradeError struct {
-	Message string
+type TradeError error
+
+func NewTradeError(text string) TradeError {
+	return TradeError(errors.New(text))
 }
 
-func (t TradeError) Error() string {
-	return fmt.Sprintf("Trade Error: %s", t.Message)
-}
+var (
+	ErrInvalidCredential      = NewTradeError("Invalid Credential")
+	ErrInsufficientPermission = NewTradeError("Insufficient Permissions")
+	ErrInsufficientBalance    = NewTradeError("Insufficient Balance")
+)
