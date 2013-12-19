@@ -51,8 +51,8 @@ func (bc *BTCChina) request(method string, params []interface{}, reply interface
 	return
 }
 
-func getjson(url string, v interface{}) (err error) {
-	res, err := http.Get(url)
+func getjson(client *http.Client, url string, v interface{}) (err error) {
+	res, err := client.Get(url)
 	if err != nil {
 		return
 	}

@@ -162,7 +162,7 @@ func (bc *BTCChina) History(_ s.Pair, since int64) (trades []s.Trade, next int64
 		Type          s.TradeType
 		Amount, Price float64
 	}
-	if err = getjson(url, &ts); err != nil {
+	if err = getjson(bc.client, url, &ts); err != nil {
 		return
 	}
 
@@ -184,7 +184,7 @@ func (bc *BTCChina) Ticker(_ s.Pair) (t *s.Ticker, err error) {
 	var v map[string]struct {
 		Buy, Sell, Last, Vol, High, Low string
 	}
-	if err = getjson(TICKER, &v); err != nil {
+	if err = getjson(bc.client, TICKER, &v); err != nil {
 		return
 	}
 	ticker := v["ticker"]
