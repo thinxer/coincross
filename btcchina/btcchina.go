@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	s "github.com/thinxer/gocoins"
 )
@@ -70,7 +71,7 @@ func (bc *BTCChina) Trade(tradeType s.TradeType, _ s.Pair, price, amount float64
 		err = bc.request("buyOrder", []interface{}{price, amount}, &success)
 	}
 	if err == nil && !success {
-		err = s.TradeError{"place order failed"}
+		err = s.TradeError(fmt.Errorf("place order failed"))
 	}
 	// TODO
 	orderId = -1
@@ -195,4 +196,9 @@ func (bc *BTCChina) Ticker(_ s.Pair) (t *s.Ticker, err error) {
 	t.High, _ = strconv.ParseFloat(ticker.High, 64)
 	t.Low, _ = strconv.ParseFloat(ticker.Low, 64)
 	return
+}
+
+func (bc *BTCChina) Stream(pair s.Pair, since int, out chan s.Trade) error {
+	s.Tail(bc, pair, time.Second, out)
+	return nil
 }

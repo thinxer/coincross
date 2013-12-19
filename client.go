@@ -107,10 +107,13 @@ type Client interface {
 	// Returns the orderbook (or market depth) of the given pair.
 	// Usually this is a public API.
 	Orderbook(pair Pair, limit int) (*Orderbook, error)
-	// Returns the trade history of the given pair, as well as a cursor for next since
+	// Returns the trade history of the given pair, as well as a cursor for next since.
 	// Usually this is a public API.
 	History(pair Pair, since int64) ([]Trade, int64, error)
 	// Returns the ticker of the given pair.
 	// Usually this is a public API.
 	Ticker(pair Pair) (*Ticker, error)
+
+	// History streaming.
+	Stream(pair Pair, since int, output chan Trade) error
 }

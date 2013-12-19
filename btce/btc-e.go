@@ -277,6 +277,11 @@ func (b *BTCE) Ticker(pair s.Pair) (t *s.Ticker, err error) {
 	return
 }
 
+func (b *BTCE) Stream(pair s.Pair, since int, out chan s.Trade) error {
+	s.Tail(b, pair, 2*time.Second, out)
+	return nil
+}
+
 type Info struct {
 	ServerTime int64 `json:"server_time"`
 	Pairs      map[string]struct {
