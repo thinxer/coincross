@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Returns BTC/USD
@@ -37,6 +38,10 @@ func (p *Pair) UnmarshalJSON(b []byte) (err error) {
 		*p = Pair{Symbol(parts[1]), Symbol(parts[0])}
 	}
 	return
+}
+
+func (t Trade) String() string {
+	return fmt.Sprintf("%s %d\t%s\t%.3f@%.3f\t!%s", t.Pair, t.Id, t.Type, t.Amount, t.Price, time.Unix(t.Timestamp, 0).Format("15:04:05"))
 }
 
 func (t *TradeType) MarshalJSON() ([]byte, error) {
