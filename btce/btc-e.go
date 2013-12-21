@@ -311,3 +311,7 @@ func getjson(url string, v interface{}) (err error) {
 	res.Body.Close()
 	return
 }
+
+func init() {
+	s.Register("btce", NewClient)
+}

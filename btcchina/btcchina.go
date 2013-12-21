@@ -202,3 +202,7 @@ func (bc *BTCChina) Stream(pair s.Pair, since int, out chan s.Trade) error {
 	s.Tail(bc, pair, time.Second, out)
 	return nil
 }
+
+func init() {
+	s.Register("btcchina", NewClient)
+}
