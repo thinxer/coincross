@@ -198,8 +198,8 @@ func (bc *BTCChina) Ticker(_ s.Pair) (t *s.Ticker, err error) {
 	return
 }
 
-func (bc *BTCChina) Stream(pair s.Pair, since int, out chan s.Trade) error {
-	s.Tail(bc, pair, time.Second, out)
+func (bc *BTCChina) Stream(pair s.Pair, since int64, out chan s.Trade) error {
+	s.Tail(bc, pair, since, time.Second, out)
 	return nil
 }
 

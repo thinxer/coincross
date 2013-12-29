@@ -115,5 +115,5 @@ type Client interface {
 	Ticker(pair Pair) (*Ticker, error)
 
 	// History streaming.
-	Stream(pair Pair, since int, output chan Trade) error
+	Stream(pair Pair, since int64, output chan Trade) error
 }

@@ -277,8 +277,8 @@ func (b *BTCE) Ticker(pair s.Pair) (t *s.Ticker, err error) {
 	return
 }
 
-func (b *BTCE) Stream(pair s.Pair, since int, out chan s.Trade) error {
-	s.Tail(b, pair, 2*time.Second, out)
+func (b *BTCE) Stream(pair s.Pair, since int64, out chan s.Trade) error {
+	s.Tail(b, pair, since, 2*time.Second, out)
 	return nil
 }
 

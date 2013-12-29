@@ -8,11 +8,11 @@ import (
 // This function is used for tailing trading data of a Client
 // by repeatly calling History function.
 // Trades are returned to the chan Trade t.
-func Tail(c Client, pair Pair, interval time.Duration, t chan Trade) {
+func Tail(c Client, pair Pair, since int64, interval time.Duration, t chan Trade) {
 	var (
-		tid, since int64 = -1, -1
-		trades     []Trade
-		err        error
+		tid    int64 = -1
+		trades []Trade
+		err    error
 	)
 	fib := newFibonacci()
 	for {
