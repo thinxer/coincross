@@ -40,8 +40,20 @@ func (p *Pair) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
+func (o Order) String() string {
+	return fmt.Sprintf("%s\t%d\t%s\t%s\t%f\t%f(%f)", time.Unix(o.Timestamp, 0).Format("20060102 15:04:05"), o.Id, o.Type, o.Pair, o.Price, o.Remain, o.Amount)
+}
+
 func (t Trade) String() string {
 	return fmt.Sprintf("%s %d\t%s\t%.3f@%.3f\t!%s", t.Pair, t.Id, t.Type, t.Amount, t.Price, time.Unix(t.Timestamp, 0).Format("15:04:05"))
+}
+
+func (t Transaction) String() string {
+	amounts := ""
+	for k, v := range t.Amounts {
+		amounts = amounts + fmt.Sprintf("\t%s:%f", k, v)
+	}
+	return fmt.Sprintf("%s\t%d%s\t%s", time.Unix(t.Timestamp, 0).Format("20060102 15:04:05"), t.Id, amounts, t.Descritpion)
 }
 
 func (t *TradeType) MarshalJSON() ([]byte, error) {

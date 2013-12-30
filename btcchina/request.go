@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -39,27 +41,35 @@ func (bc *BTCChina) request(method string, params []interface{}, reply interface
 	req.Header.Set("Json-Rpc-Tonce", fmt.Sprintf("%d", tonce))
 	r, err := bc.client.Do(req)
 	if err == nil {
-		decoder := json.NewDecoder(r.Body)
 		var response struct {
 			Result interface{}
 			Id     string
 		}
 		response.Result = reply
-		err = decoder.Decode(&response)
-		r.Body.Close()
+		return decode(r.Body, &response)
 	}
 	return
 }
 
 func getjson(client *http.Client, url string, v interface{}) (err error) {
 	res, err := client.Get(url)
-	if err != nil {
-		return
+	if err == nil {
+		return decode(res.Body, v)
 	}
-	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(v)
-	res.Body.Close()
 	return
+}
+
+func decode(body io.ReadCloser, v interface{}) error {
+	content, err := ioutil.ReadAll(body)
+	body.Close()
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(content, v)
+	if err != nil {
+		return fmt.Errorf("Unmarshal failed: %s", string(content))
+	}
+	return nil
 }
 
 func php_float(v interface{}) string {

@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	s "github.com/thinxer/gocoins"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -57,11 +59,11 @@ func (b *BTCE) request(method string, params map[string]interface{}, v interface
 			Error   string
 		}
 		body.Return = v
-		decoder := json.NewDecoder(response.Body)
-		err = decoder.Decode(&body)
-		response.Body.Close()
-		if err == nil && body.Success == 0 {
-			err = fmt.Errorf("BTC-E Error: %v", body.Error)
+		err = decode(response.Body, &body)
+		if err == nil {
+			if body.Success == 0 {
+				return fmt.Errorf("BTC-E Error: %v", body.Error)
+			}
 		}
 	}
 	return
@@ -216,7 +218,7 @@ func (b *BTCE) Orderbook(pair s.Pair, limit int) (orderbook *s.Orderbook, err er
 		}
 		return
 	}
-	err = getjson(url, &reply)
+	err = getjson(b.client, url, &reply)
 	if err == nil {
 		orderbook = new(s.Orderbook)
 		reply_orderbook, _ := reply[pair.LowerString()]
@@ -240,7 +242,7 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, next int64, 
 		Type      s.TradeType
 		Timestamp int64
 	}
-	err = getjson(url, &reply)
+	err = getjson(b.client, url, &reply)
 	if err == nil {
 		reply_trades := reply[pair.LowerString()]
 		for i := len(reply_trades) - 1; i >= 0; i-- {
@@ -269,7 +271,7 @@ func (b *BTCE) Ticker(pair s.Pair) (t *s.Ticker, err error) {
 			ServerTime                           int64 `json:"server_time"`
 		}
 	}
-	err = getjson(url, &ticker)
+	err = getjson(b.client, url, &ticker)
 	tt := &ticker.Ticker
 	if err == nil {
 		t = &s.Ticker{tt.Buy, tt.Sell, tt.High, tt.Low, tt.Last, tt.Vol}
@@ -297,19 +299,29 @@ type Info struct {
 func (b *BTCE) Info() (info *Info, err error) {
 	url := fmt.Sprintf("%s/3/info", PUBLIC_API)
 	info = new(Info)
-	err = getjson(url, info)
+	err = getjson(b.client, url, info)
 	return
 }
 
-func getjson(url string, v interface{}) (err error) {
-	res, err := http.Get(url)
-	if err != nil {
-		return
+func getjson(client *http.Client, url string, v interface{}) (err error) {
+	res, err := client.Get(url)
+	if err == nil {
+		return decode(res.Body, v)
 	}
-	decoder := json.NewDecoder(res.Body)
-	err = decoder.Decode(v)
-	res.Body.Close()
 	return
+}
+
+func decode(body io.ReadCloser, v interface{}) error {
+	content, err := ioutil.ReadAll(body)
+	body.Close()
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(content, v)
+	if err != nil {
+		return fmt.Errorf("Unmarshal failed: %s", string(content))
+	}
+	return nil
 }
 
 func init() {
