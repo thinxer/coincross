@@ -45,7 +45,7 @@ func (o Order) String() string {
 }
 
 func (t Trade) String() string {
-	return fmt.Sprintf("%s %d\t%s\t%.3f@%.3f\t!%s", t.Pair, t.Id, t.Type, t.Amount, t.Price, time.Unix(t.Timestamp, 0).Format("15:04:05"))
+	return fmt.Sprintf("%s %d\t%s\t%8.3f@%-8.6g\t!%s", t.Pair, t.Id, t.Type, t.Amount, t.Price, time.Unix(t.Timestamp, 0).Format("15:04:05"))
 }
 
 func (t Transaction) String() string {
