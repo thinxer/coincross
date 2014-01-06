@@ -3,6 +3,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -29,5 +30,11 @@ func main() {
 	client := s.New(exchange, apikey, secret, s.TimeoutTransport(*flagTimeout, *flagTimeout))
 
 	cmd := flag.Arg(0)
-	cmds[cmd](client)
+	fn, ok := cmds[cmd]
+	if ok {
+		fn(client)
+	} else {
+		fmt.Fprintf(os.Stderr, "not supported: %s\n", cmd)
+		os.Exit(1)
+	}
 }
