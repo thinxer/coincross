@@ -1,4 +1,4 @@
-// A simple tool for trading on the command line interface
+// A simple tool for trading on the command line interface.
 package main
 
 import (

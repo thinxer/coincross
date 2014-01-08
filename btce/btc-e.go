@@ -1,3 +1,4 @@
+// Client implementation for BTC-E.
 package btce
 
 import (
@@ -7,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	s "github.com/thinxer/gocoins"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	s "github.com/thinxer/gocoins"
 )
 
 const (

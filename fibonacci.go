@@ -4,23 +4,23 @@ import (
 	"time"
 )
 
-type Fibonacci struct {
+type fibonacci struct {
 	a, b int64
 }
 
-func newFibonacci() *Fibonacci {
-	return &Fibonacci{
+func newFibonacci() *fibonacci {
+	return &fibonacci{
 		a: 0,
 		b: 1,
 	}
 }
 
-func (f *Fibonacci) Next() int64 {
+func (f *fibonacci) Next() int64 {
 	f.a, f.b = f.b, f.a+f.b
 	return f.a
 }
 
-func (f *Fibonacci) Prev() int64 {
+func (f *fibonacci) Prev() int64 {
 	if f.a > 0 {
 		f.a, f.b = f.b-f.a, f.a
 	}
@@ -28,8 +28,8 @@ func (f *Fibonacci) Prev() int64 {
 }
 
 // If f returns true, repeat at give interval.
-// Otherwise, sleep in seconds of Fibonacci series.
-func FibonacciTimer(f func() bool, interval time.Duration) {
+// Otherwise, sleep in seconds of fibonacci series.
+func fibonacciTimer(f func() bool, interval time.Duration) {
 	fib := newFibonacci()
 	for {
 		start := time.Now()

@@ -1,3 +1,4 @@
+// Client implementation for BTCChina.
 package btcchina
 
 import (
