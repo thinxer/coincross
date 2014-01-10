@@ -33,7 +33,6 @@ func trade(c s.Client, tradeType s.TradeType, args []string) {
 func init() {
 	cmd := newCmd("buy", "price amount")
 	cmd.Run = func(cmd *commander.Command, args []string) {
-		fmt.Println(args)
 		trade(client, s.Buy, args)
 	}
 }
