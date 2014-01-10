@@ -34,7 +34,7 @@ func (p *Pair) UnmarshalJSON(b []byte) (err error) {
 	var s string
 	err = json.Unmarshal(b, &s)
 	if err == nil {
-		parts := strings.Split(strings.ToUpper(string(b)), "_")
+		parts := strings.Split(strings.ToUpper(s), "_")
 		*p = Pair{Symbol(parts[1]), Symbol(parts[0])}
 	}
 	return
