@@ -108,7 +108,7 @@ func (b *BTCE) Trade(tradeType s.TradeType, pair s.Pair, price, amount float64) 
 		Funds    Funds
 	}
 	err = b.request("Trade", map[string]interface{}{
-		"pair":   pair,
+		"pair":   pair.LowerString(),
 		"type":   strings.ToLower(tradeType.String()),
 		"rate":   price,
 		"amount": amount,
@@ -138,19 +138,19 @@ func (b *BTCE) Transactions(limit int) (transactions []s.Transaction, err error)
 		Status    int
 		Timestamp int64
 	}
-	err = b.request("TransHistory", map[string]interface{}{"count": limit, "order": "DESC"}, &reply)
-	if err == nil {
-		for id, tr := range reply {
-			var t s.Transaction
-			t.Id, _ = strconv.ParseInt(id, 10, 64)
-			t.Timestamp = tr.Timestamp
-			// TODO parse DESC and fill amounts better
-			t.Amounts = map[s.Symbol]float64{
-				s.Symbol(strings.ToUpper(tr.Currency)): tr.Amount,
-			}
-			t.Descritpion = tr.Desc
-			transactions = append(transactions, t)
+	if err = b.request("TransHistory", map[string]interface{}{"count": limit, "order": "DESC"}, &reply); err != nil {
+		return
+	}
+	for id, tr := range reply {
+		var t s.Transaction
+		t.Id, _ = strconv.ParseInt(id, 10, 64)
+		t.Timestamp = tr.Timestamp
+		// TODO parse DESC and fill amounts better
+		t.Amounts = map[s.Symbol]float64{
+			s.Symbol(strings.ToUpper(tr.Currency)): tr.Amount,
 		}
+		t.Descritpion = tr.Desc
+		transactions = append(transactions, t)
 	}
 	return
 }
@@ -193,18 +193,18 @@ func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err err
 	if pair != s.ALL {
 		params["pair"] = pair
 	}
-	err = b.request("TradeHistory", params, &reply)
-	if err == nil {
-		for id, trade := range reply {
-			var t s.Trade
-			t.Id, _ = strconv.ParseInt(id, 10, 64)
-			t.Price = trade.Rate
-			t.Amount = trade.Amount
-			t.Timestamp = trade.Timestamp
-			t.Type = trade.Type
-			t.Pair = trade.Pair
-			trades = append(trades, t)
-		}
+	if err = b.request("TradeHistory", params, &reply); err != nil {
+		return
+	}
+	for id, trade := range reply {
+		var t s.Trade
+		t.Id, _ = strconv.ParseInt(id, 10, 64)
+		t.Price = trade.Rate
+		t.Amount = trade.Amount
+		t.Timestamp = trade.Timestamp
+		t.Type = trade.Type
+		t.Pair = trade.Pair
+		trades = append(trades, t)
 	}
 	return
 }
@@ -220,13 +220,13 @@ func (b *BTCE) Orderbook(pair s.Pair, limit int) (orderbook *s.Orderbook, err er
 		}
 		return
 	}
-	err = getjson(b.client, url, &reply)
-	if err == nil {
-		orderbook = new(s.Orderbook)
-		reply_orderbook, _ := reply[pair.LowerString()]
-		orderbook.Asks = transform(reply_orderbook.Asks)
-		orderbook.Bids = transform(reply_orderbook.Bids)
+	if err = getjson(b.client, url, &reply); err != nil {
+		return
 	}
+	orderbook = new(s.Orderbook)
+	reply_orderbook, _ := reply[pair.LowerString()]
+	orderbook.Asks = transform(reply_orderbook.Asks)
+	orderbook.Bids = transform(reply_orderbook.Bids)
 	return
 }
 
@@ -244,40 +244,37 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, next int64, 
 		Type      s.TradeType
 		Timestamp int64
 	}
-	err = getjson(b.client, url, &reply)
-	if err == nil {
-		reply_trades := reply[pair.LowerString()]
-		for i := len(reply_trades) - 1; i >= 0; i-- {
-			trade := reply_trades[i]
-			var t s.Trade
-			t.Id = trade.Tid
-			t.Timestamp = trade.Timestamp
-			t.Price = trade.Price
-			t.Amount = trade.Amount
-			t.Type = trade.Type
-			t.Pair = pair
-			trades = append(trades, t)
-			next = t.Timestamp
-		}
+	if err = getjson(b.client, url, &reply); err != nil {
+		return
+	}
+	reply_trades := reply[pair.LowerString()]
+	for i := len(reply_trades) - 1; i >= 0; i-- {
+		trade := reply_trades[i]
+		var t s.Trade
+		t.Id = trade.Tid
+		t.Timestamp = trade.Timestamp
+		t.Price = trade.Price
+		t.Amount = trade.Amount
+		t.Type = trade.Type
+		t.Pair = pair
+		trades = append(trades, t)
+		next = t.Timestamp
 	}
 	return
 }
 
 func (b *BTCE) Ticker(pair s.Pair) (t *s.Ticker, err error) {
-	url := fmt.Sprintf("%s/3/%s/ticker", PUBLIC_API, pair.LowerString())
-	var ticker struct {
-		Ticker struct {
-			High, Low, Avg, Vol, Last, Buy, Sell float64
-			Vol_Cur                              float64 `json:"vol_cur"`
-			Updated                              int64
-			ServerTime                           int64 `json:"server_time"`
-		}
+	url := fmt.Sprintf("%s/3/ticker/%s", PUBLIC_API, pair.LowerString())
+	var reply map[string]struct {
+		High, Low, Avg, Vol, Last, Buy, Sell float64
+		Vol_Cur                              float64 `json:"vol_cur"`
+		Updated                              int64
 	}
-	err = getjson(b.client, url, &ticker)
-	tt := &ticker.Ticker
-	if err == nil {
-		t = &s.Ticker{tt.Buy, tt.Sell, tt.High, tt.Low, tt.Last, tt.Vol}
+	if err = getjson(b.client, url, &reply); err != nil {
+		return
 	}
+	tt := reply[pair.LowerString()]
+	t = &s.Ticker{tt.Buy, tt.Sell, tt.High, tt.Low, tt.Last, tt.Vol_Cur}
 	return
 }
 
