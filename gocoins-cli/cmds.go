@@ -96,15 +96,14 @@ func init() {
 	cmd.Run = func(cmd *commander.Command, args []string) {
 		orders, err := client.Orderbook(flagPair, *limit)
 		check(err)
-		fmt.Println("Asks:")
-		for _, o := range orders.Asks {
-			fmt.Printf("%v\t%v\n", o.Price, o.Amount)
+		fmt.Println("Amount\t\tAsks\t\tBids\t\tAmount")
+		min := len(orders.Asks)
+		if len(orders.Bids) < min {
+			min = len(orders.Bids)
 		}
-		fmt.Println("Bids:")
-		for _, o := range orders.Bids {
-			fmt.Printf("%v\t%v\n", o.Price, o.Amount)
+		for i := 0; i < min; i++ {
+			fmt.Printf("%-16.12g%-16.12g%-16.12g%-16.12g\n", orders.Asks[i].Amount, orders.Asks[i].Price, orders.Bids[i].Price, orders.Bids[i].Amount)
 		}
-
 	}
 }
 
