@@ -7,29 +7,29 @@ import (
 	"time"
 )
 
-// Returns BTC/USD
+// String returns "BTC/USD" for {USD, BTC}.
 func (p Pair) String() string {
 	return string(p.Target + "/" + p.Base)
 }
 
-// For flag
+// Set sets the pair to {USD, BTC} from "BTC/USD".
 func (p *Pair) Set(s string) error {
 	parts := strings.Split(strings.ToUpper(s), "/")
 	*p = Pair{Symbol(parts[1]), Symbol(parts[0])}
 	return nil
 }
 
-// Returns btc_usd
+// LowerString returns "btc_usd" for {USD, BTC}.
 func (p Pair) LowerString() string {
 	return strings.ToLower(string(p.Target + "_" + p.Base))
 }
 
-// Marshal to "btc_usd"
+// MarshalJSON to "btc_usd" from {USD, BTC}.
 func (p *Pair) MarshalJSON() ([]byte, error) {
 	return json.Marshal(p.LowerString())
 }
 
-// Unmarshal from "btc_usd"
+// UnmarshalJSON from "btc_usd" to {USD, BTC}.
 func (p *Pair) UnmarshalJSON(b []byte) (err error) {
 	var s string
 	err = json.Unmarshal(b, &s)

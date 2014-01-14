@@ -10,11 +10,11 @@ import (
 // Trades are returned to the chan Trade t.
 func Tail(c Client, pair Pair, since int64, interval time.Duration, t chan Trade) {
 	var (
-		tid    int64 = -1
-		trades []Trade
-		err    error
+		tid     int64 = -1
+		trades  []Trade
+		err     error
+		backoff = time.Second
 	)
-	fib := newFibonacci()
 	for {
 		start := time.Now()
 		trades, since, err = c.History(pair, since)
@@ -26,12 +26,14 @@ func Tail(c Client, pair Pair, since int64, interval time.Duration, t chan Trade
 					t <- tx
 				}
 			}
-			fib.Prev()
+			if backoff > time.Second {
+				backoff = backoff / 2
+			}
 		} else {
-			backoff := fib.Next()
 			log.Printf("Error getting history: %s", err.Error())
-			log.Printf("Waiting for %ds before retrying...", backoff)
-			time.Sleep(time.Duration(backoff) * time.Second)
+			log.Printf("Waiting for %v before retrying...", backoff)
+			time.Sleep(backoff)
+			backoff *= 2
 		}
 		time.Sleep(interval - dur)
 	}

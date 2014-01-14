@@ -129,6 +129,8 @@ func (b *BTCE) Cancel(orderId int64) (success bool, err error) {
 	return
 }
 
+// Transactions returns your transactions,
+// including trades, deposits, withdraws, placed/cancelled orders etc.
 func (b *BTCE) Transactions(limit int) (transactions []s.Transaction, err error) {
 	var reply map[string]struct {
 		Type      int
@@ -155,6 +157,7 @@ func (b *BTCE) Transactions(limit int) (transactions []s.Transaction, err error)
 	return
 }
 
+// Orders will return your active orders for all pairs.
 func (b *BTCE) Orders() (orders []s.Order, err error) {
 	var reply map[string]struct {
 		Pair             s.Pair
@@ -179,6 +182,7 @@ func (b *BTCE) Orders() (orders []s.Order, err error) {
 	return
 }
 
+// TradeHistory returns your past trade transactions.
 func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err error) {
 	var reply map[string]struct {
 		Pair        s.Pair
@@ -191,7 +195,7 @@ func (b *BTCE) TradeHistory(pair s.Pair, since int64) (trades []s.Trade, err err
 	}
 	params := map[string]interface{}{"from_id": since, "order": "DESC"}
 	if pair != s.ALL {
-		params["pair"] = pair
+		params["pair"] = pair.LowerString()
 	}
 	if err = b.request("TradeHistory", params, &reply); err != nil {
 		return

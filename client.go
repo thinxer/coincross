@@ -16,15 +16,15 @@ changes.
 */
 package gocoins
 
-// A currency symbol, such as USD, CNY, BTC etc.
+// Symbol represents a currency, such as USD, CNY, BTC etc.
 type Symbol string
 
-// A trading pair, such as {USD, BTC}
+// Pair is for a trading pair, such as {USD, BTC}
 type Pair struct {
 	Base, Target Symbol
 }
 
-// Some predefined symbols. You are not limited to use these.
+// Some predefined Symbols. You are not limited to use these.
 const (
 	BTC Symbol = "BTC"
 	LTC        = "LTC"
@@ -32,6 +32,7 @@ const (
 	USD        = "USD"
 )
 
+// Some predefined pairs.
 var (
 	ALL     = Pair{"", ""}
 	BTC_CNY = Pair{CNY, BTC}
@@ -41,10 +42,7 @@ var (
 	LTC_BTC = Pair{BTC, LTC}
 )
 
-type Ticker struct {
-	Buy, Sell, High, Low, Last, Volume float64
-}
-
+// TradeType is the direction of a trade.
 type TradeType int
 
 const (
@@ -52,6 +50,11 @@ const (
 	Sell
 	Buy
 )
+
+// Ticker represents for the result of Ticker APIs.
+type Ticker struct {
+	Buy, Sell, High, Low, Last, Volume float64
+}
 
 // A historical trade instance.
 // As you can see Trade is a special case of Transaction.

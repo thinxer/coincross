@@ -18,6 +18,7 @@ func timeoutDialer(connectTimeout time.Duration, totalTimeout time.Duration) fun
 	}
 }
 
+// TimeoutTransport returns a http transport with given connect and total timeout.
 func TimeoutTransport(connectTimeout time.Duration, totalTimeout time.Duration) *http.Transport {
 	return &http.Transport{
 		Dial: timeoutDialer(connectTimeout, totalTimeout),
