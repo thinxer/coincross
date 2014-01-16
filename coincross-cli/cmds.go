@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"code.google.com/p/go-commander"
 
-	s "github.com/thinxer/gocoins"
+	s "github.com/thinxer/coincross"
 )
 
 func init() {

@@ -1,5 +1,5 @@
 /*
-Gocoins is a collection of cryptocurrency trading APIs.
+Coincross is a collection of cryptocurrency trading APIs.
 
 This is the base package that defines the unified interface, as well as some
 common data structures. API implementations should live in their own package.
@@ -14,7 +14,7 @@ Well, to their best.
 As more and more exchanges are being supported, this interface may subject to
 changes.
 */
-package gocoins
+package coincross
 
 // Symbol represents a currency, such as USD, CNY, BTC etc.
 type Symbol string

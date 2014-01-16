@@ -7,8 +7,8 @@ import (
 	"time"
 
 	commander "code.google.com/p/go-commander"
-	s "github.com/thinxer/gocoins"
-	_ "github.com/thinxer/gocoins/all"
+	s "github.com/thinxer/coincross"
+	_ "github.com/thinxer/coincross/all"
 )
 
 // Populate this slice with newCmd, and it will be used in the commander.
@@ -35,7 +35,7 @@ func main() {
 	cmd := commander.Commander{
 		Name:     os.Args[0],
 		Commands: cmds,
-		Flag:     flag.NewFlagSet("gocoins client", flag.ExitOnError),
+		Flag:     flag.NewFlagSet("cli", flag.ExitOnError),
 	}
 	cmd.Flag.Var(&flagPair, "pair", "pair to operate on")
 	cmd.Flag.DurationVar(&flagTimeout, "timeout", 10*time.Second, "timeout for connections")

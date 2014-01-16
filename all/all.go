@@ -2,6 +2,6 @@
 package all
 
 import (
-	_ "github.com/thinxer/gocoins/btcchina"
-	_ "github.com/thinxer/gocoins/btce"
+	_ "github.com/thinxer/coincross/btcchina"
+	_ "github.com/thinxer/coincross/btce"
 )

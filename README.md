@@ -1,13 +1,14 @@
-gocoins
+Coincross
 =======
 
-Gocoins is a collection of APIs for trading on various cryptocurrency exchanges, with a unified interface.
+Coincross is a collection of APIs for trading on various cryptocurrency exchanges, with a unified interface.
 
 Supported Exchanges:
 
 + [BTCChina](https://vip.btcchina.com)
 + [BTC-E](https://btc-e.com)
 
+Coincross was once called "gocoins", but renamed to "coincross" to prevent name collisions.
 
 Disclaimer
 ----------

@@ -1,4 +1,4 @@
-package gocoins
+package coincross
 
 import (
 	"net/http"
