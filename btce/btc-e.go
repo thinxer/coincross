@@ -30,7 +30,7 @@ type BTCE struct {
 	client *http.Client
 }
 
-func NewClient(apikey, secret string, transport *http.Transport) s.Client {
+func New(apikey, secret string, transport *http.Transport) *BTCE {
 	return &BTCE{apikey, []byte(secret), &http.Client{
 		Transport: transport,
 	}}
@@ -328,5 +328,7 @@ func decode(body io.ReadCloser, v interface{}) error {
 }
 
 func init() {
-	s.Register("btce", NewClient)
+	s.Register("btce", func(apikey, secret string, transport *http.Transport) s.Client {
+		return New(apikey, secret, transport)
+	})
 }

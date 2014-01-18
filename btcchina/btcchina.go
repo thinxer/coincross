@@ -23,7 +23,7 @@ type BTCChina struct {
 	client *http.Client
 }
 
-func NewClient(apikey, secret string, transport *http.Transport) s.Client {
+func New(apikey, secret string, transport *http.Transport) *BTCChina {
 	return &BTCChina{apikey, []byte(secret), &http.Client{
 		Transport: transport,
 	}}
@@ -205,5 +205,7 @@ func (bc *BTCChina) Stream(pair s.Pair, since int64, out chan s.Trade) error {
 }
 
 func init() {
-	s.Register("btcchina", NewClient)
+	s.Register("btcchina", func(apikey, secret string, transport *http.Transport) s.Client {
+		return New(apikey, secret, transport)
+	})
 }
