@@ -1,5 +1,7 @@
 Coincross
-=======
+=========
+
+[![Build Status](https://travis-ci.org/thinxer/coincross.png?branch=master)](https://travis-ci.org/thinxer/coincross)
 
 Coincross is a collection of APIs for trading on various cryptocurrency exchanges, with a unified interface.
 
