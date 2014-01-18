@@ -167,8 +167,8 @@ func (bc *BTCChina) History(_ s.Pair, since int64) (trades []s.Trade, next int64
 		return
 	}
 
+	var t s.Trade
 	for _, tx := range ts {
-		var t s.Trade
 		t.Id, _ = strconv.ParseInt(tx.Tid, 10, 64)
 		t.Timestamp, _ = strconv.ParseInt(tx.Date, 10, 64)
 		t.Price = tx.Price
@@ -199,9 +199,8 @@ func (bc *BTCChina) Ticker(_ s.Pair) (t *s.Ticker, err error) {
 	return
 }
 
-func (bc *BTCChina) Stream(pair s.Pair, since int64, out chan s.Trade) error {
-	s.Tail(bc, pair, since, time.Second, out)
-	return nil
+func (bc *BTCChina) Stream(pair s.Pair, since int64) *s.Streamer {
+	return s.Tail(bc, pair, since, time.Second)
 }
 
 func init() {

@@ -110,9 +110,8 @@ func init() {
 func init() {
 	cmd := newCmd("watch", "")
 	cmd.Run = func(cmd *commander.Command, args []string) {
-		ct := make(chan s.Trade)
-		go client.Stream(flagPair, -1, ct)
-		for t := range ct {
+		streamer := client.Stream(flagPair, -1)
+		for t := range streamer.C {
 			fmt.Println(t)
 		}
 	}

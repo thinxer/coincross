@@ -94,6 +94,11 @@ type Orderbook struct {
 	}
 }
 
+type Streamer struct {
+	C       <-chan Trade
+	Closing chan<- bool
+}
+
 // This is the interface that every API implementation should use.
 type Client interface {
 	// Should return the balance of current account.
@@ -118,5 +123,5 @@ type Client interface {
 	Ticker(pair Pair) (*Ticker, error)
 
 	// History streaming.
-	Stream(pair Pair, since int64, output chan Trade) error
+	Stream(pair Pair, since int64) *Streamer
 }

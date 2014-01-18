@@ -252,9 +252,9 @@ func (b *BTCE) History(pair s.Pair, since int64) (trades []s.Trade, next int64, 
 		return
 	}
 	reply_trades := reply[pair.LowerString()]
+	var t s.Trade
 	for i := len(reply_trades) - 1; i >= 0; i-- {
 		trade := reply_trades[i]
-		var t s.Trade
 		t.Id = trade.Tid
 		t.Timestamp = trade.Timestamp
 		t.Price = trade.Price
@@ -282,9 +282,8 @@ func (b *BTCE) Ticker(pair s.Pair) (t *s.Ticker, err error) {
 	return
 }
 
-func (b *BTCE) Stream(pair s.Pair, since int64, out chan s.Trade) error {
-	s.Tail(b, pair, since, 2*time.Second, out)
-	return nil
+func (b *BTCE) Stream(pair s.Pair, since int64) *s.Streamer {
+	return s.Tail(b, pair, since, time.Second*2)
 }
 
 type Info struct {
